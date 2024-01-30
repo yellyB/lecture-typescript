@@ -31,3 +31,43 @@ npx tsc          // ts파일을 js파일로 변환
 - module: “commonjs” → 최신 es Module 쓰고 싶으면 (es2022 = es2015) 로 설정
 - forceConsistentCasingInFileNames: true → 파일이름에 대소문자 구분에서 import
 - skipLibCheck: true → 라이브러리의 타입 파일인 .d.ts 를 건너뛴다.
+
+
+
+<br/>
+
+---
+
+<br/>
+
+
+# 섹션1
+
+### 배열 타입 표현 법 두가지
+
+- number[]
+- Array<number>
+
+### 타입은 정확하게
+
+- vscode에서 커서 올리면 타입 추론해주는거 활용하자
+
+```jsx
+const foo: string = '5';
+```
+
+- 위 코드는 문제 있는 코드: const 키워드를 통해 생성되었고 ‘5’라는 정확한 타입이 있는데  
+굳이 string이라는 더 넓은 범위의 타입을 정해줘버림
+⇒ 타입스크립트가 어차피 ‘5’라고 추론해주기 때문에 이런걸 건들지말자. 타입스크립트가 이상하게 추론할때만 지정해주기
+- 타입추론이 any로 나오게 된다면 이땐 typing해주자
+
+### JS 변환 시 사라지는 부분 파악하자
+
+```jsx
+function add(x: number, y: number): number;  // 이건 타입 선언한거라 js로 변환하면 사라짐
+function add(x, y) {
+	return x + y;
+}
+```
+
+- 사라지는 부분 지웠을 때 제대로 된 자바스크립트 코드여야 하기 때문에 알아야 함
