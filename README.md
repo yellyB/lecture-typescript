@@ -71,3 +71,84 @@ function add(x, y) {
 ```
 
 - 사라지는 부분 지웠을 때 제대로 된 자바스크립트 코드여야 하기 때문에 알아야 함
+
+
+### `never` 타입
+
+- 빈 배열 ([]) 타입은 `never`이기 때문에 string[] 같이 해줘야 `.push()` 같은 거 사용 가능
+
+### 느낌표(!)
+
+- 예를들어 어떤 값의 타입이 `string | null` 일 때, 마지막에 ! 를 붙이면 `string` 타입으로 강제
+    - null 이나 undefined 가 아님을 보증함.
+    
+    ```tsx
+    const head = document.querySelector('#head');  // Element | null
+    const head = document.querySelector('#head')!;  // Element
+    ```
+    
+    - 근데 비추천하는 이유 ⇒ 어떤것도 확실하지 않기 때문. 하지만 읽을 수 있으라고 알려주는거임
+    - 차라리 아래같이 쓰자.
+    
+    ```tsx
+    if (head) {
+    	head.innerHTML = 'hello';
+    }
+    ```
+    
+
+### 템플릿 리터럴 타입
+
+```tsx
+type StrType = 'world' | 'hell';
+
+type Greeting = `hello ${StrType}`;  // hello world, hello hell 로 자동 타입 추천
+```
+
+### 튜플
+
+- 튜플 타입에 없는걸 [i]로는 추가 못함. 근데 타입스크립트는 바보라서 push 로는 추가 가능
+
+```tsx
+const tuple: [string, number] = ['1', 1];
+
+tuple[2] = 'hello';  // 불가
+tuple.push('hello');  // 가능
+```
+
+### as const
+
+- enum을 쓸수도 있고 객체를 enum같이 쓸 수도 있음. 근데 enum은 자바스크립트로 변환하면 사라지지만, 객체+as const 로 쓰면 계속 남아있다. ⇒ 그래서 객체 방식을 추천
+
+```tsx
+const Direction = {
+	Up: 0,
+	Down: 1,
+	Left: 2,
+	Right: 3
+} as const;  // 아래랑 동일한 코드
+
+const Direction: {Up: 0, Down: 1, Left: 2, Right: 3} = {
+	Up: 0,
+	Down: 1,
+	Left: 2,
+	Right: 3
+} as const;
+```
+
+- as const 를 안쓰면 타입스크립트는 값들을 number 형으로 추론
+⇒ as const 로 의도대로 명확한 타입으로 지정해주자
+⇒ 이렇게 쓰면 `readonly Up: 0` 같이 타입 정해짐
+
+- 근데 enum 안쓰면 조금 불편한 점: 아래같이 써야함
+    
+    ```tsx
+    type DirectionType = typeof Direction[keyof typeof Direction];
+    ```
+    
+    - 위 코드 해석
+        1. `type DirectionType = keyof Direction;` <- 이게 원형
+        2. 근데 이게 타입이 아님 => `typeof` 를 앞에 붙여줌
+        ⇒ `type DirectionType = keyof typeof Direction`
+        3. 근데 또 여기서 키 말고 값만 뽑아내서 그거 사용해서 타입 정의하고 싶음
+        ⇒ 이래서 최종적으로 저 코드가 된 것.
