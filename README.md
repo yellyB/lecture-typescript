@@ -152,3 +152,16 @@ const Direction: {Up: 0, Down: 1, Left: 2, Right: 3} = {
         ⇒ `type DirectionType = keyof typeof Direction`
         3. 근데 또 여기서 키 말고 값만 뽑아내서 그거 사용해서 타입 정의하고 싶음
         ⇒ 이래서 최종적으로 저 코드가 된 것.
+
+### union(|) intersection(&)
+
+- 간단한거는 type, 복잡한 객체 지향은 interface 사용하
+- 타입을 한 번 잘못 설정하면 줄줄이 문제 생김. 마치 아래 같이!
+    
+    ```jsx
+    function add(x: string | number, y: string | number): string | number { return x + y}
+    // 위 add 함수 파라미터 타입은 문제가 없으나..
+    
+    const result: string | number = add(1,2);
+    // 이 result 는 분명 number타입인데, 잘못된 타입 선언으로 string타입이 될 수도 있는 상태가 되어버림
+    ```
