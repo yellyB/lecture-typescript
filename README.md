@@ -165,3 +165,68 @@ const Direction: {Up: 0, Down: 1, Left: 2, Right: 3} = {
     const result: string | number = add(1,2);
     // 이 result 는 분명 number타입인데, 잘못된 타입 선언으로 string타입이 될 수도 있는 상태가 되어버림
     ```
+
+### 타입 앨리어스와 인터페이스
+
+- 인터페이스는 같은 이름을 계속 선언할 수 있음 → 계속 확장됨. 때문에 라이브러리는 보통 인터페이스 씀
+
+### 잉여 속성 검사
+
+- 객체 리터럴을 타입 정의한 변수에 대입할때는 잉여 속성 검사를 한다.
+    
+    ```tsx
+    interface Human { name: string }
+    
+    const oto: Human = { name: 'bomi', height: 160};  // 잉여 속성 검사를 하기 때문에 height 에 대한 에러 남
+    ```
+    
+    ⇒ 이때는 객체 리터럴을 임시 변수에 한번 담은 뒤, 임시 변수를 다시 변수에 넣으면 문제가 없다.
+    
+    ```tsx
+    const temp = { name: 'bomi', height: 160};
+    const oto: Human = temp;  // 이때는 타입 문제 없음
+    ```
+    
+
+### void
+
+- void 타입 정의하는 세가지 경우가 있다.
+    - 매개변수 콜백
+    - 함수의 직접적인 리턴 값
+    - 함수 메서드 자체
+    
+    ```tsx
+    function a(callback: () => void) {}  // 매개변수 콜백
+    function a(): void {}  // 함수 리턴 값
+    interface Human { talk: () => void }  // 메서드
+    ```
+    
+    ⇒ 이 중에 유효한 리턴값이 있으면 에러나는 경우는: 2번, 직접적인 리턴값이 void로 설정된 경우
+    
+    ⇒ 나머지 두 경우는 “리턴값을 사용하지 않겠다!”는 뜻일 뿐
+    
+- 활용처 예시
+    - 아무튼.. 이런 상황에서 아래 코드 사용할때, 여기 콜백 함수의 리턴값은 number임
+    근데 위에 보듯이 콜백함수 타입이 undefined이기 때문에 number는에 할당할 수 없다.
+    따라서 콜백함수 타입을 void로 맞춰줘야함
+    ⇒ `void` `=/=` `undefined`
+    
+    ```tsx
+    declare function forEach(arr: number[], callback: (el: number) => undefined): void;
+    
+    forEach([1, 2, 3], el => target.push(el));
+    ```
+    
+    - (참고) 함수를 바디 없이 선언함. 그리고 구현부 적어줘야 하는데 그러기 싫다면? ⇒ declare 키워드 사용
+    
+    ```tsx
+    function forEach(arr: number[], callback: (el: number) => undefined): void;
+    function forEach() {}  // <- 이거 하기 싫음!
+    
+    // 그럼 선언할 때 아래처럼 declare 붙여주면 됨. 이 부분은 js 변환 시 사라짐
+    declare function forEach(arr: number[], callback: (el: number) => undefined): void;
+    ```
+    
+    - forEach가 외부에서 선언되었는데 그게 확실하고 우리는 타입만 지정해주고 싶다고 할 때 
+
+
