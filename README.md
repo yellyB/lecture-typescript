@@ -74,7 +74,7 @@ function add(x, y) {
 
 
 ### `never` 타입
-
+- 함수 리턴값이나 변수 값이 절대로 발생하지 않을 때 사용
 - 빈 배열 ([]) 타입은 `never`이기 때문에 string[] 같이 해줘야 `.push()` 같은 거 사용 가능
 
 ### 느낌표(!)
@@ -119,7 +119,8 @@ tuple.push('hello');  // 가능
 ### as const
 
 - enum을 쓸수도 있고 객체를 enum같이 쓸 수도 있음. 근데 enum은 자바스크립트로 변환하면 사라지지만, 객체+as const 로 쓰면 계속 남아있다. ⇒ 그래서 객체 방식을 추천
-
+    - 남겨두는걸 추천하는 이유: 런타임에서 한번 더 사용해서 검사할 수 있기 때문. 사용자 입력은 컴파일 단계에선 검사하기 힘들다.
+      
 ```tsx
 const Direction = {
 	Up: 0,
@@ -230,3 +231,70 @@ const Direction: {Up: 0, Down: 1, Left: 2, Right: 3} = {
     - forEach가 외부에서 선언되었는데 그게 확실하고 우리는 타입만 지정해주고 싶다고 할 때 
 
 
+
+### unknown 과 any
+
+- any: 타입 검사 포기
+- unknown: 지금 당장은 타입을 모르겠을 때
+
+![읽는법: (왼쪽 열)은 (상단 행)에 대입 (가능/불가능)하다](https://github.com/yellyB/lecture-typescript/assets/50893303/b877d35a-56df-43f4-863b-0c3eff843a3f)
+(왼쪽 열)은 (상단 행)에 대입 (가능/불가능)하다
+- 초록 체크 표시는 strict: true 일때는 x로 간주하기
+
+
+
+### 타입가드
+
+```tsx
+function numOfStr(a: number | string) {
+    (a as number).toFixed(1);  // -> 이 경우 a는 string도 올 수 있기 때문에 js단에서 에러남
+}
+
+// 따라서 아래같이 타입 가드 해준다.
+function numOfStr(a: number | string) {
+    if (typeof a === 'number) {
+        a.toFixed(1);
+    } else {
+        a.charAt(3);  // number가 아니면 string일 것이기 때문에 else로 써줘도 타입 추론 잘 됨
+    }
+}
+
+// 배열 여부는 아래 같이 구분
+if (Array.isArray(a)) {}
+
+// 클래스는 new키워드로 생성한 객체를 타입 검사할 수 있음
+class classA {
+    aaa() {}
+}
+class classB {
+    bbb() {}
+}
+function classAOrB(param: classA | classB) {
+    if (param instanceof classA) {
+        param.aaa();
+    }
+}
+classAOrB(new classA());
+```
+
+- 타입스크립트는 if 문에 대해 타입추론 잘해준다.
+    - 그래서 객체같은 경우는 안의 속성 혹은 키로 구분함
+    
+    ```tsx
+    type apple = { type: 'fruit', color: 'red' }
+    type cat = { type: 'animal', fur: 'soft' }
+    
+    // 값으로 체크
+    function typeCheck(param: apple | cat) {
+       if (param.type === 'fruit') {
+            param.type;
+        }
+    }
+    
+    // 속성으로 체크
+    function typeCheck(param: apple | cat) {
+       if ('color' in apple) {
+            param.type;
+        }
+    }
+    ```
