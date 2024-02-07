@@ -243,7 +243,7 @@ const Direction: {Up: 0, Down: 1, Left: 2, Right: 3} = {
 
 
 
-### 타입가드
+### 타입가드(타입 좁히기)
 
 ```tsx
 function numOfStr(a: number | string) {
@@ -252,7 +252,7 @@ function numOfStr(a: number | string) {
 
 // 따라서 아래같이 타입 가드 해준다.
 function numOfStr(a: number | string) {
-    if (typeof a === 'number) {
+    if (typeof a === 'number') {
         a.toFixed(1);
     } else {
         a.charAt(3);  // number가 아니면 string일 것이기 때문에 else로 써줘도 타입 추론 잘 됨
@@ -298,3 +298,18 @@ classAOrB(new classA());
         }
     }
     ```
+
+### is: 커스텀 타입 가드
+
+- 함수 리턴값에 is 키워드를 넣으면 커스텀하게 타입 검사 할 수 있음
+
+```tsx
+const isRejected = (input: PromiseSettledResult<unknown>): input is PromiseRejectedResult => {
+    return input.status === 'rejected';
+};
+
+const Promises = await Promise.allSettled([Promise.resolve('a'), Promise.resolve('b')]);
+// 바로 아래 코드는 타입스크립트가 타입을 PromiseRejectedResult 타입으로 자동 필터 못해줌. 그래서 아래아래 줄처럼 커스텀 타입 써서 추론.
+const errors = promises.filter((promise) => promise.status === 'rejected');
+const errors = promises.filter(isRejected);
+```
