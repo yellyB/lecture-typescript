@@ -313,3 +313,32 @@ const Promises = await Promise.allSettled([Promise.resolve('a'), Promise.resolve
 const errors = promises.filter((promise) => promise.status === 'rejected');
 const errors = promises.filter(isRejected);
 ```
+
+
+### 인덱스드 시그니처
+
+- 객체의 모든 키가 특정 타입이면 사용하면 좋음
+
+```tsx
+type A = { a: string, b: string, c: string, d: string, ... }  // (x)이렇게 하는것 보단
+type A = { [key: string]: string }  // (o)이렇게 한번에 선언 가능
+```
+
+### 맵드 타입스
+
+- 객체의 키가 미리 정의한 타입으로만 구성되었으면 좋겠다
+
+```tsx
+type B = 'Human' | 'Mammal' | 'Animal';
+type A = { [key in B]: string };  // key 는 B에 있는 값들만 올 수 있음
+```
+
+### 클래스
+
+|  | public | protected | private |
+| --- | --- | --- | --- |
+| 클래스내부 | o | o | o |
+| 인스턴스 | o | x | x |
+| 상속클래스 | o | o | x |
+
+
