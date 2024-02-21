@@ -341,4 +341,46 @@ type A = { [key in B]: string };  // key 는 B에 있는 값들만 올 수 있�
 | 인스턴스 | o | x | x |
 | 상속클래스 | o | o | x |
 
+### 제네릭
+
+**제네릭의 필요성**
+
+- add(1, 2) → 3
+add('1', '2') → 12
+⇒ 이 두가지 결과를 모두 반환할 수 있는 add() 함수 만들고 싶음
+
+```tsx
+function add(x: string | number, y: string | number): string | number { return x + y };
+// 이렇게 만들었더니 add(1, '2') 도 될 수 있는 문제가 생김
+
+function add(x: string, y: string): string {return x + y};
+function add(x: number, y: number): number {return x + y};
+// 이렇게 두개 만들자니 같은 이름 두번 선언 못함.
+```
+
+- 이때문에 타입을 변수처럼 만들게됨
+
+```tsx
+function add<T>(x: T, y: T): T {return x + y};
+// T가 무슨 타입이 될지는 모르지만, 아무튼 파라미터x, y랑 결과값은 모두 동일한 타입이라고 알려주기
+```
+
+- 다양하게 사용하기
+
+```tsx
+function add<T extends number | string>(x: T, y: T): T {return x + y};  // number or string으로 제한
+
+function add<T extends number, K extends string>(x: T, y: K): T {return x + y};  // T, K 둘다 각각 제한
+
+function add<T extends { a: string }>(x: T): T {return x};
+
+function add<T extends string[]>(x: T): T {return x};
+```
+
+- 리액트에서는 JSX때문에 꺽쇠쓰면 ts 에러뜸
+
+```tsx
+const add = <T = unknown>(x: T, y: T) => ({ x,y });  // (보통 이렇게 사용)기본값 넣어주기
+const add = <T extends unknown>(x: T, y: T) => ({ x,y });  // 이렇게도 가능
+```
 
