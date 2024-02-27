@@ -384,3 +384,38 @@ const add = <T = unknown>(x: T, y: T) => ({ x,y });  // (보통 이렇게 사용
 const add = <T extends unknown>(x: T, y: T) => ({ x,y });  // 이렇게도 가능
 ```
 
+
+
+<br/>
+
+---
+
+<br/>
+
+
+# 섹션2: lib.es5.d.ts 분석
+
+### forEach 제네릭 분석
+
+```tsx
+// lib.es5.d.ts 에서 긁어온 forEach 의 타입
+interface Array<T> {
+    forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void;
+}
+
+[1, 2, 3].forEach((value) => { console.log(value}; )  // ts는 value를 number로 추론해준다.
+```
+
+- 제네릭 덕분에 forEach 콜백 함수의 value 를 number라고 알 수 있게됨
+
+### map 제네릭 분석
+
+```tsx
+interface Array<T> {
+    map<U>(callbackfn: (value: T, index: number, array: T[]) => U, thisArg?: any): U[];
+}
+
+const strings = [1, 2, 3].map((value) => value.toString());  // ['1', '2', '3']
+```
+
+- toString() 한 결과가 U(여기선 string), 그러므로 map의 리턴값은 string[]가 됨
