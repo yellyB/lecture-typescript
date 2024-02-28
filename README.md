@@ -419,3 +419,23 @@ const strings = [1, 2, 3].map((value) => value.toString());  // ['1', '2', '3']
 ```
 
 - toString() 한 결과가 U(여기선 string), 그러므로 map의 리턴값은 string[]가 됨
+
+
+### filter 제네릭 분석
+
+```tsx
+interface Array<T> {
+    filter<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
+    filter(predicate: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T[];
+}
+
+const filtered1 = [1, 2, 3].filter((value) => value % 2);  // 첫번째 선언된 타입에 들어맞음
+const filtered2 = ['1', 2, '3'].filter((value) => typeof value === 'string');  // 첫번째, 두번째 타입에 둘 다 적용됨.
+
+// filtered2 는 string | number [] 로 추론됨
+// 만약 filtered2 를 string[] 으로 추론하고 싶다면?
+
+const predicate = (value: string | number): value is string => typeof value === 'string';
+const filtered2 = ['1', 2, '3'].filter(predicate);  // string[] 으로 추론 잘 됨
+// 위에 predicate에서 value is string으로 타입스크립트에게 알려줬기 때문에 추론 잘 된것
+```
