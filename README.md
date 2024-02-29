@@ -439,3 +439,96 @@ const predicate = (value: string | number): value is string => typeof value === 
 const filtered2 = ['1', 2, '3'].filter(predicate);  // string[] 으로 추론 잘 됨
 // 위에 predicate에서 value is string으로 타입스크립트에게 알려줬기 때문에 추론 잘 된것
 ```
+
+
+### forEach, map, filter 타입 직접 만들기
+
+- forEach
+
+```tsx
+const nums: Arr = [1, 2, 3];
+
+nums.forEach((item) => {
+    console.log(item);
+});
+nums.forEach((item) => {
+    console.log(item);
+    return '3';
+});
+
+// 이제부터 Arr 타입만들어주기(변화과정)
+interface Arr {
+    forEach(): void;
+    forEach(callback: () => void): void;  // forEach 첫번째 인자 콜백함수니까 추가
+    forEach(callback: (item: number) => void): void;  // 일단은 nums 가 숫자밖에 없으니 number
+    // ['1', '2', '3'] 도 커버하도록 하려면?
+    forEach(callback: (item: string | number) => void): void;  // 하지만 콜백 내부에서 toFixed, charAt 쓰면 타입 에러 발생
+    forEach<T>(callback: (item: T) => void): void;  // 이러면 실제 사용할 때 forEach<number> 같은 식으로 귀찮게 작성을 해줘야 함
+}
+
+// 최종 결과물
+interface Arr<T> {
+    forEach<T>(callback: (item: T) => void): void;
+}
+const nums: Arr<number> = [1, 2, 3];
+...
+
+```
+
+- map
+
+```tsx
+const nums: Arr = [1, 2, 3];
+
+nums.map((v) => v + 1);
+
+// 타입 만들기
+interface Arr<T> {
+    map(): void;
+    map<T>(callback: (v: T) => void): void;
+    map<T>(callback: (v: T) => T): T[];  // 위 예시코드의 map 할 때 v+1도 number이니 T로 설정, 결과도 배열로 설정
+}
+
+// 여기까지 하니 문제점 있음. 아래 경우 커버 못함
+const strs1 = nums.map((v) => v.toString());  // ['2', '3', '4']; string[]
+const strs2 = nums.map((v) => v % 2 === 0);  // [false, true, false]; boolean[]
+
+interface Arr<T> {
+    map<S>(callback: (v: T) => S): S[];  // S를 추가해 다양한 타입 커버할 수 있도록 변경
+}
+```
+
+- filter
+
+```tsx
+const nums: Arr = [1, 2, 3];
+const filtered1 = nums.filter((v) => v % 2 === 0);  // [2]: number[]
+
+// 타입 만들기
+interface Arr<T> {
+    filter(): void;
+    filter<T>(callback: (v: T) => boolean): T[];
+}
+
+// filtered1을 보면 위 타입만으로 커버 가능하긴 함.
+// 문제는 아래가 추가되었을 경우.
+
+const numsAndStrs: Arr = [1, '2', 3];
+const filtered2 = numsAndStrs.filter((v) => typeof v === 'string');  // ['2']: string[]
+// filtered2 의 결과는 string[] 인데도 위에 세팅한 타입 때문에 filtered2는 string | number[]로 추론된다.
+
+// 다시 만들기 ㄱㄱ
+interface Arr<T> {
+    filter<T>(callback: (v: T) => v is T): T[];  // 형식조건자
+}
+const filtered2 = numsAndStrs.filter((v): v is string => typeof v === 'string');  // 여기에도 형식조건자 추가. 이러면 일단 에러는 사라진다. 그러나 여전히 string | number[]로 추론됨
+
+// 다시 만들기 ㄱㄱ 2.  string | number 가 아닌 새로운 타입이 필요하다.
+interface Arr<T> {
+    filter<S>(callback: (v: T) => v is S): S[];  // S는 어디서 나왔길래 v랑 연결되나? ts가 이해하지 못해서 에러
+    filter<S extends T>(callback: (v: T) => v is S): S[];  // S는 어디서 나왔길래 v랑 연결되나? ts가 이해하지 못해서 에러
+}
+```
+
+
+
