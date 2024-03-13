@@ -531,4 +531,79 @@ interface Arr<T> {
 ```
 
 
+### 공변성과 반공변성
+
+- 함수를 다른 함수타입 변수에 대입할 때 return 값은 대입하려는 타입이 더 넓으면 가능. 매개변수는 더 좁으면 가능
+
+```tsx
+function funcA(x: string | number): number {
+    return 0;
+}
+type typeB(x: string): number | string;
+
+let funcB: typeB = funcA;  // 가능
+```
+
+*참고 : 타입 넓히기, 타입 좁히기
+
+```tsx
+// 타입 넓히기
+let a = 5;  // hover 해보면 a는 number로 추론됨. = 타입스크립트가 타입 넓히기
+
+// 타입 좁히기
+let a: string | number = 5;
+if (typeof a === 'string') {  // 이렇게 string 으로 좁혀주는거
+    a.toString();
+}
+```
+
+### 오버로딩
+
+- 타입 하나로 모든 경우 커버하지 못하겠다면 같은 타입을 여러번 선언할 수 있음
+    - 타입 스크립트가 알아서 타입 추론해줄거임
+
+### catch 문에서 에러 타입?
+
+```tsx
+// Error에는 response가 없어서 추가
+interface CustomError extends Error {
+    response?: {
+        data: any;
+    }
+}
+
+(async () => {
+    try {
+        await axios.get();
+    } catch (err: unknown) {
+        const customError = err as CustomError;  // 1. unknown을 썼기 때문에 반드시 as문 사용 / 2. as 는 1회성이라 변수로 따로 할당해서 사용
+        console.log(customError.response?.data);
+        customError.response?.data;
+    }
+})();
+
+// 위 코드의 문제점: catch 문의 변수 customError가 CustomError 타입이 아니면 어쩔거임..? 밑에 줄줄이 에러나게됨
+// 아래처럼 개선:
+
+// interface 쓰면 자바스크립트에서 사라져서 아래에 instanceof 를 쓸수가 없게됨. 때문에 class로 변경
+class CustomError extends Error {
+    response?: {
+        data: any;
+    }
+}
+
+(async () => {
+    try {
+        await axios.get();
+    } catch (err) {
+        // 아래처럼 if문으로 방어해주기
+		    if (err instanceof CustomError) {
+            const customError = err as CustomError;
+            console.log(customError.response?.data);
+            customError.response?.data;
+		    }
+    }
+})();
+```
+
 
