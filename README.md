@@ -607,3 +607,53 @@ class CustomError extends Error {
 ```
 
 
+# 섹션3: Utility Types
+
+### Partial 타입 분석
+
+- 타입스크립트 내장 타입인 Partial을 직접 만들어보기
+    - Partial: 타입의 모든 요소들을 옵셔널로 만들어줌
+
+```tsx
+interface Profile {
+    name: string;
+    age: number;
+    married: boolean;
+}
+
+const person: Partial<Profile> = {
+    name: 'kimbomi',
+    age: 30,
+}
+
+// 위에서 쓸 수 있도록 Partial 타입 만드는 과정
+type Partial<T> = {
+    [Key: string]: string;
+    [Key in keyof Profile]?: string;  // ?로 옵셔널값을 만들어줌
+    [Key in keyof Profile]?: Profile[Key];  // value의 타입 정해주기
+    [Key in keyof T]?: T[Key];  // 범용적으로 사용할 수 있게 T 선언
+}
+```
+
+### Pick 타입 분석
+
+- Partial의 단점은 객체에 아무값도 안넣어도 되는 상태로 만들어버리는 것
+- Pick을 쓰면 특정 타입만 뽑기 때문에 이 단점 보완됨 / 혹은 Omit을 써서 특정 타입만 제거
+
+```tsx
+const person: Pick<Profile, 'name' | 'age'> = {
+    name: 'kimbomi',
+    age: 30,
+} 
+
+type Pick<T, S> = {
+    // 우선 T, S 두개가 필요함
+    ?? : T[S];  // 키는 모르지만 값은 이렇게 될 것 같음
+    [Key in keyof S]: T[S];  // 근데 Profile['name' | 'age'] 형태는 불가능한데?
+    [Key in keyof S]: S[Key];  // 근데 여기에 S랑 T의 관계를 정해줘야함
+}
+
+type Pick<T, S extends keyof T> = {
+    [Key in S]: T[Key];  // extends로 S가 T의 일부인걸 알려줌
+}
+```
