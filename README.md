@@ -657,3 +657,36 @@ type Pick<T, S extends keyof T> = {
     [Key in S]: T[Key];  // extends로 S가 T의 일부인걸 알려줌
 }
 ```
+
+
+### Omit, Exclude, Extract 타입 분석
+
+- Exclude: 유니온 타입에서 특정 타입을 ‘제거’해 새로운 유니온 타입 만듬
+* 유니온 타입: 여러 개의 타입을 하나의 변수에 허용
+- Exclude, Extract
+
+```tsx
+type Animal = 'cat' | 'dog' | 'human';
+
+type Mammal = Exclude<Animal, 'human'>;  // cat, dog
+type Human = Extract<Animal, 'cat' | 'dog'>;  // cat, dog
+
+// type Exclude<T, U> = T extends U? never : T;
+// type Extract<T, U> = T extends U? T : never;
+
+// 위를 보면 Exclude는 T가 U의 확장판이면 never로 취급하니까, 확장판이면 빼는것.
+```
+
+- Omit: Extract + Pick.
+
+```tsx
+type A = Exclude<keyof Profile, 'married'>
+
+type Omit<T, S> = Pick<T, Exclude<keyof T, S>>
+const NewPerson: Pick<Profile, Exclude<keyof Profile, 'married'>> = {
+    name: 'kim',
+    age: 29,
+}
+```
+
+
