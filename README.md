@@ -690,3 +690,68 @@ const NewPerson: Pick<Profile, Exclude<keyof Profile, 'married'>> = {
 ```
 
 
+### Required, Record, NonNullable 타입 분석
+
+- Required는 옵셔널한 요소를 전부 필수 요소로 만들어줌
+
+```tsx
+interface Profile {
+    name?: string;
+    age?: number;
+    married?: boolean;
+}
+
+type Required<T> = {
+    [key in keyof T]-?: T[key];  // modifier. ?를 빼버린다는 뜻
+}
+```
+
+- Readonly 붙이면 수정 못하게 할 수 있음
+
+```tsx
+const person: Readonly<Profile> = {
+    name: 'kimbomi',
+    age: 30,
+}
+person.name = 'nero';  // 변경 불가능
+
+// "-" 붙여서 readonly를 제거할수도 있음
+type R<T> = {
+    -readonley [key in keyof T]-?: T[key];
+}
+```
+
+- Record: 객체를 표현하는 한가지 방법
+
+```tsx
+// 아래 두개는 같은 의미
+interface Obj { [key: string]: number }
+const a: Record<string, number> = { a: 3, b:5, c: 7 };
+```
+
+```tsx
+type Record<T extends keyof any, S> = {
+    [key in T]: S;
+}
+// 객체의 키로는 number, string, symbol만 올 수 있기 때문에 T에 keyof any를 써서 제한조건을 걸어준다.
+```
+
+- NonNullable: 여러 타입들중에 null과 undefined을 제외하고 나머지만 취하고 싶을 때 사용
+    
+    * 타입들이 키에 적용되는게 있고 객체에 적용되는게 있어서 이 둘을 구별해야한다. NonNullable은 키에 적용
+    
+
+```tsx
+// 사용 예시
+type All = string | null | undefined | boolean | number;
+type filtered = NonNullable<All>;  // 타입이 string | boolean | number로 추론됨
+```
+
+```tsx
+// NonNullable 타입 만들기
+type NonNullable<T> = T extends null | undefined ? never : T;
+```
+
+
+
+
