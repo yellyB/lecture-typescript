@@ -677,13 +677,13 @@ type Human = Extract<Animal, 'cat' | 'dog'>;  // cat, dog
 // 위를 보면 Exclude는 T가 U의 확장판이면 never로 취급하니까, 확장판이면 빼는것.
 ```
 
-- Omit: Extract + Pick.
+- Omit: Exclude + Pick. 지정한 속성을 제외한 나머지들로 새로운 타입 만들어냄
 
 ```tsx
 type A = Exclude<keyof Profile, 'married'>
 
 type Omit<T, S> = Pick<T, Exclude<keyof T, S>>
-const NewPerson: Pick<Profile, Exclude<keyof Profile, 'married'>> = {
+const NewPerson: Omit<Profile, 'married'>> = {
     name: 'kim',
     age: 29,
 }
@@ -753,5 +753,49 @@ type NonNullable<T> = T extends null | undefined ? never : T;
 ```
 
 
+### infer 타입 분석
 
+- Parameters: 변수도 타입으로 사용할 수 있다.
+    - (...args: any) => any 는 T를 함수형식으로 제한하려고 사용됨
+    - infer = 추론. 아래 코드에서 사용된 부분: args의 타입이 추론이 가능하면 그 타입을 쓰겠다는 뜻
+
+```tsx
+function zip(x: number, y: string, z: boolean): { x: number, y: string, z: boolean } {
+    return { x, y, z };
+}
+
+type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;
+type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
+
+// zip함수를 타입으로 사용할 수 있다.
+type Params = Parameters<typeof zip>;
+type FirstType = Params[0];  // number. 이런식으로 타입이 배열로 이뤄진경우는 인덱스로 접근 가능하다.
+```
+
+- ConstructorParameters: 클래스의 생성자도 타입으로 사용가능
+
+```tsx
+type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;
+type InstanceType<T extends abstract new (...args: any) => any> = T extends abstract new (...args: any) => infer R ? R : any;
+```
+
+```tsx
+class A {
+    a: string;
+    b: number;
+    c: boolean;
+    constructor(a: string, b: number, c: boolean) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+    }
+}
+
+type C = ConstructorParameters<typeof A>;  // typeof 클래스가 생성자
+type I = InstanceType<typeof A>;
+
+const temp = new A('a', 44, true);  // temp는 인스턴스
+```
+
+- 기타 유틸리티 타입으로는 Lowercase(문자를 소문자로 바꿔서 타입으로), Uppercase, Capitalize(첫글자 대문자화), Uncapitalize, ThisType 등이 있음. 이런것들은 타입스크립트 내부적으로 코드적으로 처리해서 타입스크립트로는 구현 할 수 없음
 
