@@ -799,3 +799,31 @@ const temp = new A('a', 44, true);  // temp는 인스턴스
 
 - 기타 유틸리티 타입으로는 Lowercase(문자를 소문자로 바꿔서 타입으로), Uppercase, Capitalize(첫글자 대문자화), Uncapitalize, ThisType 등이 있음. 이런것들은 타입스크립트 내부적으로 코드적으로 처리해서 타입스크립트로는 구현 할 수 없음
 
+
+### Promise와 Awaited 타입 분석
+
+```tsx
+const p1 = Promise.resolve(1).then((a) => a + 1).then((a) => a + 1).then((a) => a.toString());
+const p2 = Promise.resolve(2);
+const p3 = new Promise((res, rej) => {
+    setTimeout(res, 1000);
+})
+
+Promise.all([p1, p2, p3]).then((result) => {
+    console.log(result);  // ['3', 2, undefined]  => string, number, unknown 으로 타입 잘 추론됨. 어떻게 이게 가능할까?
+});
+```
+
+```tsx
+const arr = [1, 2, 3] as const;
+type Arr = keyof typeof arr;
+
+const key: Arr = '0' // 가능
+const key: Arr = 'length' // 가능
+const key: Arr = '3' // 불가
+const key: Arr = 1 // 불가
+
+// 할당 가능한 값이 위처럼 되는 이유:
+// [p1, p2, p3] 는 { '0': p1, '1': p2, '2': p3, length: 3 } 의 형태이다.
+// 그래서 '0' | '1' | '2' | 'length' 의 값만 할당할 수 있음
+```
