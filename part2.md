@@ -1,8 +1,16 @@
 # 섹션3: React 타입 분석
 
+
+
+<br/><br/>
+
 ### UMD 모듈과 tsconfig.json
 
 - 리액트에서 컴포넌트는 함수! props를 받아 JSX를 리턴하는 함수다: (props) ⇒ JSX
+
+
+<br/><br/>
+
 
 ### 함수 컴포넌트 (FC vs VFC)
 
@@ -22,7 +30,7 @@
     - 그래서 children을 쓰고 싶다면 직접 타이핑 해주기 ( children?: ReactNode | undefined )
 
 
-<br/><br/><br/>
+<br/><br/>
 
 
 ### useState, useEffect 타이핑
@@ -43,3 +51,99 @@ const [state, setState] = useState(() => { return 'temp' });
     - 그럼 타입스크립트에선 useEffect안에서 동기처리 어떻게 하느냐? 아래처럼  
       ![image](https://github.com/yellyB/lecture-typescript/assets/50893303/3f558399-d891-4107-bed7-e6b229d2596a)
 
+
+
+
+<br/><br/>
+
+### 브랜딩 기법
+
+- 필요에 의해 커스텀으로 타입을 새로 정의하는 방법
+
+```tsx
+// 모든 number 를 허용하는 것이 아닌, 단위에 맞는 값만 받을 수 있도록 허용하고 싶다.
+// Brand로 number 중에서도 특정 값만 허용하는 타입을 만들자.
+
+type Brand<K, T> = K & { _brand: T }
+
+type USD = brand<number, 'USD'>;
+type EUR = brand<number, 'EUR'>;
+type KRW = brand<number, 'KRW'>;
+
+const usd = 10 as USD  // number 는 원시값이라서 브랜딩 쓰려면 사용할 떄 마다 어쩔 수 없이 강제 타입 변환을 해줘야함
+const eur = 10 as EUR
+const krw = 2000 as KRW
+
+function euroToUsd(euro: EUR): number {
+    return (euro * 1.18)
+}
+
+euroToUsd(usd)  // 에러. 인자로 EUR 타입만 넣을 수 있게 했으므로 에러가 난다.
+```
+
+
+<br/><br/>
+
+
+
+### useCallback, useRef 타이핑
+
+**useCallback**
+
+- useCallback은 17버전과 다르게 18버전에서는 직접 타이핑 해줘야 한다.
+
+```tsx
+// v17
+function useCallback<T extends (...args: any[]) => any>(callback: T, deps: DependencyList): T;
+
+// v18
+function useCallback<T extends function>(callback: T, deps: DependencyList): T;
+
+// 위와 같이 18버전에서는 function으로만 정의되어 있어서 매개변수랑 리턴값을 적어줘야함. (17버전은 e는 any로 추론 되었다)
+```
+
+- 이벤트 타입을 찾는 팁
+
+```tsx
+
+const onSubmitForm = useCallback((e: FormEvent) => {
+    ...
+}, []);
+
+// 이 같이 이미 작성된 타입 있으면 F12로 타고 들어가서 타입 파일에서 동작에 맞는 타입을 찾아서 적어주자 (임포트는 'react'에서 되어야 하는것 주의!)
+
+const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    ...
+}, []);
+
+const onChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    ...
+}, []);
+```
+
+**useRef**
+
+- useRef는 총 3가지 타입이 있어서 원하는 타입에 걸리도록 해줘야함
+- (1번 타입) 그 중 첫번째인 mutableRef는 JSX와 연결해주기 위한게 아닌, 데이터 저장하는 useState같은 역할을 해주고 싶은데 리렌더링은 안하고 싶을 때 사용하는 애임
+- (2번 타입) 그럼 JSX랑 연결해주는 RefObject는 어떻게 연결시키나?
+
+```tsx
+// 타입 파일에 정의된 3가지 타입 유형
+function useRef<T>(initialValue: T): MutableRefObject<T>;  // 값만 저장하려고 쓰는 ref
+function useRef<T>(initialValue: T|null): RefObject<T>;  // JSX랑 연결하려는 ref
+function useRef<T = undefined>(): MutableRefObject<T | undefined>;
+
+// 사용할 때 예시
+const inputEl = useRef<HTMLInputElement>(null);  // 이렇게 타이핑해주면 2번째 타입으로 연결된다. HTMLInputElement 를 안쓰거나 null을 안쓰면 2번째로 연결이 안된다.
+const mutaRef = useRef(0);
+
+useEffect(() => {
+    mutaRef.current += 1;  // 얘는 이런 용도로 사용.
+})
+
+// 위와 같이 1, 2, 3번 타입으로 추론되는 이유?
+// 2번 타입은 제네릭으로 T를 받는데, 그 T가 실제 초기에 할당하는 null과 달라야 한다고 정의되어 있다.
+// 그렇기 때문에 <HTMLInputElement>을 주고, 초기값을 null로 할당하면 2번째 타입으로 연결되는 것이다.
+// HTMLInputElement를 안쓰면 초기값으로 할당한 null이 제네릭인 T로 추론되기 때문에 1번째 타입으로 연결되고
+// 초기값 null을 안넣어주면 T = undefined 인 3번째 타입으로 연결되는 것.
+```
