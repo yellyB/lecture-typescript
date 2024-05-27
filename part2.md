@@ -147,3 +147,23 @@ useEffect(() => {
 // HTMLInputElement를 안쓰면 초기값으로 할당한 null이 제네릭인 T로 추론되기 때문에 1번째 타입으로 연결되고
 // 초기값 null을 안넣어주면 T = undefined 인 3번째 타입으로 연결되는 것.
 ```
+
+
+<br/><br/>
+
+### 클래스 컴포넌트 타이핑
+
+- ReactElement 랑 ReactNode 는 다르다.
+    - **`ReactElement`** : JSX로 작성된 요소
+    - **`ReactNode` :**  React에서 렌더링할 수 있는 모든 타입. 문자열, 숫자, 배열, null, undefined, **`ReactElement`** 포함
+    - ⇒ FunctionComponent 타입에는 `ReactElement` 인데, 클래스컴포넌트 타입에는 render()가 `ReactNode` 임 (=문자열로 리턴은 클래스만 가능하다)
+- 네임스페이스 방식 vs 임포트 방식(모듈)
+    - 둘 다 코드를 조직화 & 재사용하는 방법
+    - 네임스페이스: Utils.add() 같이 사용. 주로 타입스크립트에서 사용. 브라우저orNode.js에서 사용하려면 트랜스파일 필요
+    - 모듈: 파일로 분리해서 import 해와서 사용. 브라우저, Node.js 모두 지원. 파일로 관리해서 파일 개수는 많아진다는 단점
+    - * 임포트 방식을 추천한다. (왜냐면 서로 타입 안겹치려고 하는건데 네임스페이스는 겹쳐버릴 수 있어서)
+
+
+<br/><br/>
+
+
