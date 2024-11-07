@@ -1,4 +1,108 @@
-# 섹션3: React 타입 분석
+# 섹션3: Axios 타입 분석
+
+### 다양한 방식으로 사용 가능한 axios
+
+- axios 공식 문서에 옆에 ts가 붙어있었는데, 이러면 설치할 때 @types/axios 이런거 안해도 됨
+- import axios from ‘axios’ 해서 이거 타고 라이브러리 파일 들어가보면, 가장 마지막을 확인해야 한다.
+→ export default axios 가 있군.
+→ 만약 이 파일에 “export =” 이런게 있으면 CommonJS임. 이경우엔 임포트할때 import axios = require(’axios’)로 써야함
+    (하지만 ex module introp?를 키면 ESM이랑 임포트 똑같이 쓸 수 있다.)
+    
+    * ESModule Interop: TypeScript에서 ECMAScript 모듈을 CommonJS 모듈 빙식으로 불러올 때 생기는 차이를 해결하기 위한 설정. "esModuleInterop": true 로 설정한다.
+    (Interop: "Interoperability"의 줄임말, **상호 운용성)**
+    
+- axios는 저수준인 **fetch**에 **여러 기능**을 붙여놓은것.
+- axios는 브라우저의 ky나 노드의 got과는 다르게 멀티 플랫폼에 사용하기 좋다.
+- axios의 타입을 확인해보면 axios 는 클래스이자, 함수이자, 객체이다. 그래서 new Axios(), axios(), axios.get() 세가지 방식 모두 사용 가능
+
+### ts-node 사용하기
+
+- const response = await axios.get(’~~’)해온것의 타입을 보면 any로 되어있는데, 이는 get의 타입이 get<T = any, …> 으로 되어있기 때문임. T를 안넣어줘서 기본값으로 any가 된것.
+- 작성한 .ts 파일을 실행하려면 먼저 js로 변환하고 실행해줘야함.
+    - 명령어는 “npx tsx” → “node axios.js” 두가지를 통해 실행한다.
+    - “npx tsx” 로 js 로 변환한 파일을 보면 복잡해져있는데, 이는 CSM, ESM을 모두 지원하기 위해 트릭을 준 것
+    - 이게 귀찮기 때문에 명령어 한번으로 위 과정을 해결해주는 ts-node를 설치해보자. 설치 후 “npx ts-node axios” 해주면 됨
+
+### 제네릭을 활용한 Response 타이핑
+
+- axios의 response 타이핑을 해보자.
+    
+    ```jsx
+    [axios 라이브러리 타입 파일]
+    get<T = any, R = AxiosResponse<T>, D = any>(url: string, config?: ..): Promise<R>;
+    
+    interface AxiosResponse<T = any, D = any> {
+    	data: T;
+    	...
+    }
+    
+    [구현파일.ts]
+    interface Pose {
+    	userId: number;
+    	id: number;
+    }
+    
+    const response = await axios.get<Post>('~~url~~');
+    ```
+    
+
+### AxiosError와 unknown error 대처법
+
+```jsx
+try {
+	...
+} catch (error){
+	console.log(error.response.data);  // error: 타입 에러
+}
+```
+
+- 위 같이 쓰면 타입 에러 난다. 왜? catch 문의 error는 unknown이기 때문.
+⇒ unknown 타입인 이유: try 안에 있는 코드가 axios 호출밖에 없더라도, 만약 여기서 문법 에러가 날 수도 있고 모르는 것이기 때문이다.
+- 해결법1:
+
+```jsx
+try {
+	...
+} catch (error){
+	const errorResponse = (error as AxiosError).response;
+	console.log(errorResponse?.data);
+	errorResponse?.data;
+}
+```
+
+⇒ unknown 이라 가장 쉬운 방법은 as로 타입 알려줌 + 변수에 저장해두면 나중에 쓸때도 타입 적용되어 있음
+
+- 근데 문제는.. 좋은 방법이 아니란것. 왜냐하면 error가 AxiosError 타입이 아닐경우엔 어쩔?
+- 해결법2: 커스텀 타입 가드 (+알파)
+
+```jsx
+try {
+	...
+} catch (error){
+	if (error instanceof AxiosError){
+		error.response;  // error가 AxiosError 으로 제대로 나옴
+	}
+	// 또는 axios 에서 제공해주는 타입으로도 검사 가능. (isAxiosError는 is 키워드 쓴 타입 가드임)
+	if (axios.isAxiosError(error)){
+		error.response;  // error가 AxiosError 으로 제대로 나옴
+	}
+}
+
+	// 참고: AxiosError의 isAxiosError 타입은 아래와 같음
+isAxiosError(payload: any): payload is AxiosError;
+```
+
++ AxiosError는 클래스도 되어있는데, 인터페이스 안쓰고 이렇게 한 이유는 뭘까 생각해보면, 자바스크립트 변환되었을때 남아있다는 점도 있고 타입 가드 쓰기 좋다는 이유도 있음
+
+### Axios 타입 직접 만들기
+
+
+<br/><br/>
+---
+
+<br/><br/>
+
+# 섹션4: React 타입 분석
 
 
 
