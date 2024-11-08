@@ -95,7 +95,60 @@ isAxiosError(payload: any): payload is AxiosError;
 + AxiosError는 클래스도 되어있는데, 인터페이스 안쓰고 이렇게 한 이유는 뭘까 생각해보면, 자바스크립트 변환되었을때 남아있다는 점도 있고 타입 가드 쓰기 좋다는 이유도 있음
 
 ### Axios 타입 직접 만들기
+- 실제 사용하는 코드 가져와서 타입 만들어보기
 
+```tsx
+// 기본 구조 잡기
+interface Axios {
+	get: () => {};  // axios.get<Post, AxiosResponse<Post>>('~~~'); 을 대응
+	post: () => {};  // axios.post<Created, AxiosResponse<Created>, Data>('~~~', {}); 을 대응
+	(config: {}): void;  // axios({ method: 'post', url: '~~~', data: {} ) 을 대응
+	(url: string, config: {}): void;  // axios('~~~', { method: 'post', data: {} }) 을 대응
+}
+
+// 매개변수 타이핑
+interface Axios {
+	get: (url: string) => {};
+	post: (url: string, data: any) => {};
+	(config: {}): void;
+	(url: string, config: {}): void;
+	isAxiosError: () => void;  // axios.isAxiosError(error) 을 대응
+}
+
+// isAxiosError의 커스텀 타입 가드
+interface Axios {
+	...
+	isAxiosError: <T>(error: T) => error is T;
+}
+
+// await 붙을 수 있는 애들 처리. 리턴 타입이 Promise 이다.
+interface Axios {
+	get: (url: string) => Promise;  // await axios.get<Post, AxiosResponse<Post>>('~~~'); 가 될 수 있다.
+	post: (url: string, data: any) => Promise;
+	...
+}
+
+// Promise 추가에 대한 제네릭 작성
+interface Axios {
+	get: <T, R = AxiosResponse<T>>(url: string) => Promise<R>;  // 헷갈릴 수 있는지점: response.data가 T이다. 리턴 타입 자체는 AxiosResponse 임
+	post: <T, R = AxiosResponse<T>, D>(url: string, data: D) => Promise<R>;  // data에 대한 타입도 D로 수정
+	...
+}
+
+// 제네릭에서 필수와 옵셔널에 대한 타입 처리
+// ㄴ> 제네릭에 옵셔널로 넣을수 있게 할 값들은 "변수명=any"로라도 처리하자. 제네릭 모든 값을 옵셔널 가능하게 처리
+interface Axios {
+	get: <T = any, R = AxiosResponse<T>>(url: string) => Promise<R>;
+	post: <T = any, R = AxiosResponse<T>, D = any>(url: string, data: any) => Promise<R>;
+	...
+}
+
+// isAxiosError 타이핑 수정
+interface Axios {
+	...
+	isAxiosError: (error: unknown) => error is AxiosError;  // error가 AxiosError라고 명시
+}
+```
 
 <br/><br/>
 ---
